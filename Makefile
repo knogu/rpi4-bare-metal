@@ -1,8 +1,8 @@
-ARM_GNU ?= /home/rhythm/x-tools/aarch64-rpi4-linux-gnu/bin/aarch64-rpi4-linux-gnu
-SD_BOOT ?= /media/rhythm/BOOT
-FIRMWARE ?= /home/rhythm/project/rpi4-boot
+ARM_GNU ?= aarch64-linux-gnu
+SD_BOOT ?= /Volumes/bootfs
+FIRMWARE ?= /Users/noguchikoutarou/firmware/boot
 
-MAIN_CFLAGS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -fpatchable-function-entry=2
+MAIN_CFLAGS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude
 TRACE_CFLAGS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude
 USER_CFLAGS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude
 MAIN_ASMFLAGS = -Iinclude
@@ -106,5 +106,5 @@ deploy: kernel8.img config.txt armstub8.bin
 	cp $(FIRMWARE)/start4.elf $(SD_BOOT)/
 	cp $(FIRMWARE)/fixup4.dat $(SD_BOOT)/
 	mkdir $(SD_BOOT)/overlays
-	cp $(FIRMWARE)/miniuart-bt.dtbo $(SD_BOOT)/overlays
+	cp $(FIRMWARE)/overlays/miniuart-bt.dtbo $(SD_BOOT)/overlays
 	sync
