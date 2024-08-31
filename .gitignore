@@ -1,0 +1,6 @@
+trace_build
+user_build
+main_build
+armstub/build
+armstub8.bin
+kernel8.img
