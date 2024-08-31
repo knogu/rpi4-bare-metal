@@ -27,6 +27,18 @@ void pl011_uart_init()
     // REGS_UART4->cr = 0xC301; //0b1100 0011 0000 0001
     gpio_pin_set_func(7, 4);
     gpio_pin_enable(7);
+
+    gpio_pin_set_func(8, 1);
+    gpio_pin_enable(8);
+
+    gpio_pin_set_func(9, 4);
+    gpio_pin_enable(9);
+
+    gpio_pin_set_func(10, 4);
+    gpio_pin_enable(10);
+
+    gpio_pin_set_func(11, 4);
+    gpio_pin_enable(11);
 }
 
 void pl011_uart_send(char c)

@@ -203,7 +203,7 @@ void kernel_main(u64 id)
     main_output(MU, "\n");
 
 
-    spi_init();
+    // spi_init();
     main_output(MU, "spi init done");
     init_network();
     serve();
