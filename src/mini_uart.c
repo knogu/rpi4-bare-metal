@@ -28,6 +28,8 @@ void mini_uart_init()
     /* enable TX and RX */
     REGS_AUX->mu_control = 3;
 
+    mini_uart_send('o');
+    mini_uart_send('o');
     mini_uart_send('\r');
     mini_uart_send('\n');
     mini_uart_send('\n');

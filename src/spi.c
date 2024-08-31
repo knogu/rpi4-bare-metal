@@ -41,11 +41,17 @@ struct Spi0Regs {
 #define CS_CS__SHIFT	0
 
 void spi_init() {
+    main_output(0, "init now\n");
     gpio_useAsAlt0(7);                  //CS1
+    main_output(0, "cs1 done\n");
     gpio_initOutputPinWithPullNone(8);  //CS0
+    main_output(0, "cs0 done\n");
     gpio_useAsAlt0(9);                  //MISO 
+    main_output(0, "mis0 done\n");
     gpio_useAsAlt0(10);                 //MOSI
+    main_output(0, "mosi done\n");
     gpio_useAsAlt0(11);                 //SCLK
+    main_output(0, "sclk done\n");
 }
 
 void spi_chip_select(unsigned char chip_select) {

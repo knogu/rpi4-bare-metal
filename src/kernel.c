@@ -169,13 +169,16 @@ void serve(void)
     }
 }
 
+void test() {
+    main_output(MU, ")\n");
+}
 void kernel_main(u64 id)
 {
     /* core 0 initializes mini-uart and handles uart interrupts */
     if (id == 0) {
         mini_uart_init();
-//        pl011_uart_init();
-        enable_interrupt_gic(VC_AUX_IRQ, id);
+       pl011_uart_init();
+        // enable_interrupt_gic(VC_AUX_IRQ, id);
 //        ksyms_init();
         sys_call_table_relocate();
 //        trace_init();
@@ -199,15 +202,17 @@ void kernel_main(u64 id)
     main_output_u64(MU, sys_count);
     main_output(MU, "\n");
 
+
+    spi_init();
+    main_output(MU, "spi init done");
+    init_network();
+    serve();
+
     /* initialize exception vectors and timers and the timer interrupt */
     irq_init_vectors();
     generic_timer_init();
     enable_interrupt_gic(NS_PHYS_TIMER_IRQ, id);
     irq_enable();
-
-    spi_init();
-    init_network();
-    serve();
 
     /* let the next core run */
     state++;
