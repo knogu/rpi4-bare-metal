@@ -44,7 +44,7 @@ Module         Feature        Issue Issue Summary                               
                                                                                               B1 B4 B5 B7
 MAC Interface  -              1.    MAC registers unreliable with slow asynchronous SPI clock X  X
 Reset          -              2.    CLKRDY set early                                          X  X  X  X
-Core           Operating      3.    Industrial (-40°C to +85°C) temperature range unsupported X  X
+Core           Operating      3.    Industrial (-40ï¿½C to +85ï¿½C) temperature range unsupported X  X
                Specifications
 Oscillator     CLKOUT pin     4.    CLKOUT unavailable in Power Save mode                     X  X  X  X
 Memory         Ethernet       5.    Receive buffer must start at 0000h                        X  X  X  X
@@ -80,6 +80,7 @@ Errata 18 is implemented in lwip stack
 
 /* Includes ------------------------------------------------------------------*/
 #include "enc28j60.h"
+#include "utils.h"
 #include "../include/fb.h"
 #include "../include/io.h"
 
@@ -149,7 +150,7 @@ Errata 18 is implemented in lwip stack
   * @{
   */
 
-  /* Stores how many iterations the microcontroller can do in 1 µs */
+  /* Stores how many iterations the microcontroller can do in 1 ï¿½s */
 static uint32_t iter_per_us=0;
 
 /**
@@ -189,8 +190,8 @@ static void calibrate(void)
 }
 
 /**
- * Software delay in µs
- *  us: the number of µs to wait
+ * Software delay in ï¿½s
+ *  us: the number of ï¿½s to wait
  **/
 void up_udelay(uint32_t us)
 {
@@ -371,14 +372,14 @@ void enc_reset(ENC_HandleTypeDef *handle) {
    * workaround this condition.
    *
    * Also, "After a System Reset, all PHY registers should not be read or
-   * written to until at least 50 µs have passed since the Reset has ended.
+   * written to until at least 50 ï¿½s have passed since the Reset has ended.
    * All registers will revert to their Reset default values. The dual
    * port buffer memory will maintain state throughout the System Reset."
    */
 
   handle->bank = 0; /* Initialize the trace on the current selected bank */
   //up_mdelay(2);
-  HAL_Delay(2); /* >1000 µs, conforms to errata #2 */
+  HAL_Delay(2); /* >1000 ï¿½s, conforms to errata #2 */
 }
 
 /****************************************************************************
@@ -577,7 +578,7 @@ static uint16_t enc_rdphy(ENC_HandleTypeDef *handle, uint8_t phyaddr)
 
   enc_wrbreg(handle, ENC_MICMD, MICMD_MIIRD);
 
-  /*   3. Wait 10.24 µs. Poll the MISTAT.BUSY bit to be certain that the
+  /*   3. Wait 10.24 ï¿½s. Poll the MISTAT.BUSY bit to be certain that the
    *      operation is complete. While busy, the host controller should not
    *      start any MIISCAN operations or write to the MIWRH register.
    *
@@ -650,14 +651,14 @@ static void enc_wrphy(ENC_HandleTypeDef *handle, uint8_t phyaddr,
   enc_wrbreg(handle, ENC_MIWRH, phydata >> 8);
 
   /*    The PHY register will be written after the MIIM operation completes,
-   *    which takes 10.24 µs. When the write operation has completed, the BUSY
+   *    which takes 10.24 ï¿½s. When the write operation has completed, the BUSY
    *    bit will clear itself.
    *
    *    The host controller should not start any MIISCAN or MIIRD operations
    *    while busy."
    */
 
-  /* wait for approx 12 µs */
+  /* wait for approx 12 ï¿½s */
 //  volatile int i;
 //  for (i=0; i<12*17; i++) {
 //  }
@@ -675,7 +676,7 @@ static void enc_wrphy(ENC_HandleTypeDef *handle, uint8_t phyaddr,
  *   a slightly modified procedure:
  *
  *   1. Wake-up by clearing ECON2.PWRSV.
- *   2. Wait at least 300 µs for the PHY to stabilize. To accomplish the
+ *   2. Wait at least 300 ï¿½s for the PHY to stabilize. To accomplish the
  *      delay, the host controller may poll ESTAT.CLKRDY and wait for it
  *      to become set.
  *   3. Restore receive capability by setting ECON1.RXEN.
@@ -706,12 +707,12 @@ static void enc_pwrfull(ENC_HandleTypeDef *handle)
 
   enc_bfcgreg(ENC_ECON2, ECON2_PWRSV);
 
-  /* 2. Wait at least 300 µs for the PHY to stabilize. To accomplish the
+  /* 2. Wait at least 300 ï¿½s for the PHY to stabilize. To accomplish the
    * delay, the host controller may poll ESTAT.CLKRDY and wait for it to
    * become set.
    */
 
-  /* wait for approx 350 µs */
+  /* wait for approx 350 ï¿½s */
 //  volatile int i;
 //  for (i=0; i<350*17; i++) {
 //  }
@@ -739,12 +740,15 @@ bool ENC_Start(ENC_HandleTypeDef *handle)
 
     /* Calibrate time constant */
     calibrate();
+    main_output(MU, "calibrate done");
 
     /* System reset */
 	enc_reset(handle);
+  main_output(MU, "reset done");
 
 	/* Use bank 0 */
 	enc_setbank(handle, 0);
+  main_output(MU, "bank0 done");
 
     /* Check if we are actually communicating with the ENC28J60.  If its
      * 0x00 or 0xff, then we are probably not communicating correctly
@@ -752,6 +756,7 @@ bool ENC_Start(ENC_HandleTypeDef *handle)
      */
 
     regval = enc_rdbreg(handle, ENC_EREVID);
+    main_output(MU, "getreg done");
     if (regval == 0x00 || regval == 0xff) {
       return false;
     }
@@ -768,12 +773,14 @@ bool ENC_Start(ENC_HandleTypeDef *handle)
     handle->nextpkt = PKTMEM_RX_START;
     enc_wrbreg(handle, ENC_ERXSTL, PKTMEM_RX_START & 0xff);
     enc_wrbreg(handle, ENC_ERXSTH, PKTMEM_RX_START >> 8);
+    main_output(MU, "wrbreg done");
 
     /* Set the receive data pointer */
 
     /* Errata 14 */
     enc_wrbreg(handle, ENC_ERXRDPTL, PKTMEM_RX_END & 0xff);
     enc_wrbreg(handle, ENC_ERXRDPTH, PKTMEM_RX_END >> 8);
+    main_output(MU, "errata done");
 /*
     enc_wrbreg(handle, ENC_ERXRDPTL, PKTMEM_RX_START & 0xff);
     enc_wrbreg(handle, ENC_ERXRDPTH, PKTMEM_RX_START >> 8);

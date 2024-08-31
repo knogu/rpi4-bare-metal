@@ -178,6 +178,7 @@ void kernel_main(u64 id)
     if (id == 0) {
         mini_uart_init();
        pl011_uart_init();
+       
         // enable_interrupt_gic(VC_AUX_IRQ, id);
 //        ksyms_init();
         sys_call_table_relocate();
@@ -204,15 +205,19 @@ void kernel_main(u64 id)
 
 
     // spi_init();
-    main_output(MU, "spi init done");
-    init_network();
-    serve();
+    // main_output(MU, "spi init done");
+    // init_network();
+    // serve();
 
     /* initialize exception vectors and timers and the timer interrupt */
     irq_init_vectors();
     generic_timer_init();
     enable_interrupt_gic(NS_PHYS_TIMER_IRQ, id);
     irq_enable();
+
+    main_output(MU, "spi init done");
+    init_network();
+    serve();
 
     /* let the next core run */
     state++;
